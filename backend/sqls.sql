@@ -33,18 +33,16 @@ FROM
     INFORMATION_SCHEMA.TABLE_CONSTRAINTS TC
     ON KCU.CONSTRAINT_NAME = TC.CONSTRAINT_NAME AND KCU.TABLE_NAME = TC.TABLE_NAME
 WHERE
-        C.TABLE_NAME = 'users_with_id'
+        C.TABLE_NAME = 'test'
   AND (TC.CONSTRAINT_TYPE = 'PRIMARY KEY' OR TC.CONSTRAINT_TYPE IS NULL);
 
 
 CREATE VIEW users_with_id_first_5 AS
 SELECT
     id,
-    name,
-    age,
     email,
     password
-FROM users_with_id
+FROM public.users
 LIMIT 5;
 
 select * from users_with_id_first_5;

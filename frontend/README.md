@@ -1,4 +1,4 @@
-# trevor
+# db extractor
 
 ## Project setup
 ```

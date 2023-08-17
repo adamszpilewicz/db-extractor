@@ -1,11 +1,17 @@
-id,name
-fcfcab7d-1099-4542-9706-8dc1a6888748,adam
-0fee90fd-b693-4dd8-bd25-8883db37d951,adam
-2de69f2b-e68e-4ab4-aae6-c09c3beeda5d,adam
-2cec50b6-7815-4c90-b93e-a1ffaa5bf39c,adam
-805069be-c2f7-4f83-aa9a-30a7f301ec45,adam
-2a43a975-4a58-4c8c-8747-d8c95642ddee,adam
-03d44b76-8d8f-4a4d-83f7-68c6180bcd2b,adam
-b8648e89-c738-4c1a-b6c9-c7d8f3949ed5,adam
-871eccc6-80d6-4e1e-8cd6-63ccacb9782f,adam
-9fb20c4b-9228-4248-a2bb-b188a631e0b9,adam
+Statistic Name	Value
+ Database Name	postgres
+ Active Connections	3
+ Total Transactions Committed	2319
+ Total Transactions Rolled Back	1
+ Blocks Read	1236
+ Cache Hits	152650
+ Rows Returned By Queries	1344707
+ Rows Fetched By Queries	58120
+ Rows Inserted	112
+ Rows Updated	9
+ Rows Deleted	0
+ Conflicts Detected	0
+ Active Sessions	1
+ Idle Sessions	2
+ Idle In Transaction Sessions	0
+ Fastpath Function Call Sessions	0
