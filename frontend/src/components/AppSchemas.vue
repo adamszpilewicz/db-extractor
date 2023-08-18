@@ -19,7 +19,7 @@
             <tr v-for="(table, index) in schema.table_names" :key="schema.schema_name + index">
               <td v-if="index === 0" :rowspan="schema.table_names.length">{{ schema.schema_name }}</td>
               <td>
-                <router-link :to="'/schemas/' + table">{{ table }}</router-link>
+                <router-link :to="{ name: 'TableInfo', params: { tableName: table, schemaName: schema.schema_name } }">{{ table }}</router-link>
               </td>
             </tr>
           </template>

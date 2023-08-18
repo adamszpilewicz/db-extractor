@@ -79,7 +79,7 @@ func (repo *DatabaseRepo) DiscoverSchemas() ([]SchemaInfo, error) {
 	return schemas, nil
 }
 
-func (repo *DatabaseRepo) DiscoverTableColumns(tableName string) ([]ColumnInfo, error) {
+func (repo *DatabaseRepo) DiscoverTableColumns(schemaName, tableName string) ([]ColumnInfo, error) {
 	rows, err := repo.DB.Query(context.Background(), queryTableDetails, tableName)
 	if err != nil {
 		return nil, err
@@ -97,9 +97,9 @@ func (repo *DatabaseRepo) DiscoverTableColumns(tableName string) ([]ColumnInfo, 
 	return columns, nil
 }
 
-func (repo *DatabaseRepo) FetchTableData(tableName string) ([]TableRow, error) {
+func (repo *DatabaseRepo) FetchTableData(schemaName, tableName string) ([]TableRow, error) {
 	// Construct the query to fetch all rows from the given table
-	query := fmt.Sprintf(queryAll, tableName)
+	query := fmt.Sprintf(queryAll, schemaName, tableName)
 
 	rows, err := repo.DB.Query(context.Background(), query)
 	if err != nil {
@@ -107,27 +107,7 @@ func (repo *DatabaseRepo) FetchTableData(tableName string) ([]TableRow, error) {
 	}
 	defer rows.Close()
 
-	var tableData []TableRow
-
-	for rows.Next() {
-		row := make(TableRow)
-
-		values, err := rows.Values()
-		if err != nil {
-			return nil, err
-		}
-
-		fieldDescriptions := rows.FieldDescriptions()
-
-		for i, value := range values {
-			columnName := string(fieldDescriptions[i].Name)
-			row[columnName] = value
-		}
-
-		tableData = append(tableData, row)
-	}
-
-	return tableData, nil
+	return ProcessRows(rows)
 }
 
 // ExecuteQuery executes the given SQL query and returns the results
@@ -139,32 +119,27 @@ func (repo *DatabaseRepo) ExecuteQuery(query string) ([]TableRow, error) {
 	}
 	defer rows.Close()
 
-	var results []TableRow
+	return ProcessRows(rows)
+}
 
-	// Iterate through the result rows
-	for rows.Next() {
-		row := make(TableRow)
-
-		values, err := rows.Values()
-		if err != nil {
-			return nil, err
-		}
-
-		fieldDescriptions := rows.FieldDescriptions()
-
-		for i, value := range values {
-			columnName := string(fieldDescriptions[i].Name)
-			// Check and format UUID
-			if isUUID(value) {
-				value = formatUUID(value.([16]uint8))
-			}
-			row[columnName] = value
-		}
-
-		results = append(results, row)
+func (repo *DatabaseRepo) FetchReplicationSlotsStats() ([]TableRow, error) {
+	rows, err := repo.DB.Query(context.Background(), queryReplicationSlots)
+	if err != nil {
+		return nil, err
 	}
+	defer rows.Close()
 
-	return results, nil
+	return ProcessRows(rows)
+}
+
+func (repo *DatabaseRepo) FetchProcedures() ([]TableRow, error) {
+	rows, err := repo.DB.Query(context.Background(), queryStoredProcedures)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return ProcessRows(rows)
 }
 
 func (repo *DatabaseRepo) FetchAppViews() ([]AppView, error) {
@@ -228,4 +203,14 @@ func (dr *DatabaseRepo) FetchDBStatistics() (DBStatistics, error) {
 	}
 
 	return stats, nil
+}
+
+func (repo *DatabaseRepo) FetchPgSettings() ([]TableRow, error) {
+	rows, err := repo.DB.Query(context.Background(), queryPgSettings)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return ProcessRows(rows)
 }

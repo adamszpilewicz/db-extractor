@@ -7,6 +7,9 @@ import AppCustomQuery from '../components/AppCustomQuery.vue';
 import AppViews from '../components/AppViews.vue';
 import AppInfo from '../components/AppInfo.vue';
 import AppStats from '../components/AppStats.vue';
+import AppSlots from '../components/AppSlotStats.vue';
+import AppStoredProcedures from "../components/AppStoredProcedures.vue";
+import AppPgSettings from "../components/AppPgSettings.vue";
 
 const routes = [
     {
@@ -25,10 +28,10 @@ const routes = [
         component: AppSchemas
     },
     {
-        path: '/schemas/:tableName',
+        path: '/schemas/:schemaName/:tableName',
         name: 'TableInfo',
         component: TableInfoComponent,
-        props: true // this will set the tableName param as a prop on your component
+        props: true
     },
     {
         path: '/custom-query',
@@ -41,6 +44,11 @@ const routes = [
         component: AppViews
     },
     {
+        path: '/stored-procedures',
+        name: 'StoredProcedures',
+        component: AppStoredProcedures
+    },
+    {
         path: '/info',
         name: 'Info',
         component: AppInfo
@@ -49,6 +57,16 @@ const routes = [
         path: '/db-stats',
         name: 'DBStats',
         component: AppStats
+    },
+    {
+        path: '/db-slots',
+        name: 'AppSlots',
+        component: AppSlots
+    },
+    {
+        path: '/pg-settings',
+        name: 'AppPgSettings',
+        component: AppPgSettings
     }
 ];
 

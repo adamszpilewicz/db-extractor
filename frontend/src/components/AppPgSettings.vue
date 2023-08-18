@@ -1,10 +1,6 @@
 <template>
   <div class="container mt-5">
-    <h2>Custom Query</h2>
-    <div class="form-group mt-3">
-      <label for="sqlQuery">Enter your SQL Query:</label>
-      <textarea class="form-control" id="sqlQuery" v-model="query" rows="4"></textarea>
-    </div>
+    <h2>Fetch PostgreSQL Settings</h2>
 
     <!-- Error Message -->
     <div v-if="errorMessage" class="mt-3 alert alert-danger d-flex justify-content-between align-items-center">
@@ -12,17 +8,15 @@
       <button class="btn btn-sm btn-secondary" @click="copyErrorToClipboard">Copy</button>
     </div>
 
-
     <!-- Loading Spinner -->
     <div v-if="loading" class="mt-5 d-flex justify-content-center">
       <div class="spinner-grow text-primary" role="status" style="opacity: 0.7;"></div>
     </div>
 
     <div class="d-flex justify-content-between mt-3">
-      <button class="btn btn-primary" @click="sendQuery">Execute</button>
-      <button class="btn btn-secondary" @click="copyTableToClipboard">Copy Table</button>
+      <button class="btn btn-primary mt-3" @click="fetchStats">Fetch Settings</button>
+      <button class="btn btn-secondary mt-3" @click="copyTableToClipboard">Copy Table</button>
     </div>
-
 
     <!-- Result Table -->
     <div v-if="result && result.length" class="mt-5 table-container">
@@ -33,7 +27,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="row in result" :key="row.id">
+        <tr v-for="row in result" :key="row.name">  <!-- Changed the key to row.name -->
           <td v-for="column in Object.keys(row)" :key="column">{{ row[column] }}</td>
         </tr>
         </tbody>
@@ -43,40 +37,36 @@
 </template>
 
 <script>
-
 import notie from 'notie';
 
 export default {
   data() {
     return {
-      query: '',
       result: [],
       loading: false,
       errorMessage: ''
     };
   },
+  mounted() {
+    this.fetchStats();
+  },
   methods: {
-    async sendQuery() {
-      this.errorMessage = '';  // Clear the error message
-      this.result = [];  // Clear previous results
-      this.loading = true;  // Start loading spinner
+    async fetchStats() {
+      this.errorMessage = '';
+      this.result = [];
+      this.loading = true;
 
       try {
         const creds = this.$store.state.credentials;
-        const dataToSend = {
-          credentials: creds,
-          query: this.query
-        };
         const requestOptions = {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(dataToSend)
+          body: JSON.stringify(creds)
         };
 
-        const response = await fetch('http://localhost:8081/custom-query', requestOptions);
+        const response = await fetch('http://localhost:8081/pg-settings', requestOptions); // Modified the URL to 'pg-settings'
         const result = await response.json();
 
-        // Handle error from the server
         if (result.error) {
           this.errorMessage = result.message || 'Unknown error occurred.';
           return;
@@ -84,20 +74,20 @@ export default {
 
         this.result = result.data;
       } catch (error) {
-        console.error("Error executing query:", error);
+        console.error("Error fetching stats:", error);
         this.errorMessage = "Failed to communicate with the server.";
       } finally {
-        this.loading = false;  // Stop loading spinner
+        this.loading = false;
       }
     },
     async copyErrorToClipboard() {
       try {
         await navigator.clipboard.writeText(this.errorMessage);
         console.log("Error message copied to clipboard.");
-        notie.alert({type: 'success', text: "Error message copied to clipboard.", time: 2});
+        notie.alert({position:'bottom',type: 'success', text: "Error message copied to clipboard.", time: 2});
       } catch (err) {
         console.error('Failed to copy error message: ', err);
-        notie.alert({type: 'error', text: 'Failed to copy error message.', time: 2});
+        notie.alert({position:'bottom', type: 'error', text: 'Failed to copy error message.', time: 2});
       }
     },
     async copyTableToClipboard() {
@@ -110,13 +100,12 @@ export default {
         // Copy to clipboard
         await navigator.clipboard.writeText(csvData);
         console.log("Table data copied to clipboard.");
-        notie.alert({type: 'success', text: "Table data copied to clipboard.", time: 2});
+        notie.alert({position:'bottom', type: 'success', text: "Table data copied to clipboard.", time: 2});
       } catch (err) {
         console.error('Failed to copy table data: ', err);
-        notie.alert({type: 'error', text: 'Failed to copy table data.', time: 2});
+        notie.alert({position:'bottom', type: 'error', text: 'Failed to copy table data.', time: 2});
       }
     }
-
   }
 }
 </script>
@@ -124,7 +113,7 @@ export default {
 <style scoped>
 /* Custom styles for the transparent blue spinner */
 .spinner-grow.text-primary {
-  background-color: rgba(0, 123, 255, 0.7);  /* Blue with 70% opacity */
+  background-color: rgba(0, 123, 255, 0.7); /* Blue with 70% opacity */
 }
 
 .table-container {

@@ -142,3 +142,72 @@ SELECT
     ss.idle_in_transaction_sessions,
     ss.fastpath_function_call_sessions
 FROM database_stats ds, session_stats ss;
+
+
+CREATE OR REPLACE PROCEDURE public.generate_test_data(tablesamount integer DEFAULT 1, rowspertable integer DEFAULT 100)
+    LANGUAGE plpgsql
+AS $procedure$
+DECLARE
+    random_table_names text [];
+    random_table text;
+BEGIN
+    SET search_path = "public";
+    -- generate tables names
+    FOR counter IN 1..tablesamount LOOP
+            random_table := FORMAT('"random_table"', counter);
+            random_table_names := array_append(random_table_names, random_table);
+        END LOOP;
+    -- create tables
+    FOR counter IN 1..tablesamount LOOP
+            EXECUTE format('create table IF NOT EXISTS %s(
+    				id serial,
+    				time_ff time ,
+    				date_ff date,
+    				bool_ff bool,
+    				small_int_ff smallint default 1,
+    				bigint_ff bigint default 2,
+    				integer_ff integer default 3,
+    				text_ff text default ''text'',
+    				byte_ff bytea default ''\000'',
+    				test_id text default ''test_id'',
+    				boolean_ff smallint default 0,
+    				real_ff real default 1.5,
+    				uuid_ff uuid default ''A0EEBC99-9C0B-4EF8-BB6D-6BB9BD380A11'',
+    				timetz_ff timestamptz default now()
+    			);', random_table_names [counter]);
+            EXECUTE format('alter table %s replica identity full', random_table_names [counter]);
+
+            -- 		CREATE TABLE partition_first PARTITION OF chunks_partitioned_table FOR VALUES FROM (1) TO (300000);
+-- 		CREATE TABLE partition_second PARTITION OF chunks_partitioned_table FOR VALUES FROM (300000) TO (600000);
+-- 		CREATE TABLE partition_third PARTITION OF chunks_partitioned_table FOR VALUES FROM (600000) TO (1100000);
+
+
+        END LOOP;
+    -- 	insert elements to tables
+    FOR counter_tables IN 1..tablesamount LOOP
+            FOR counter_rows IN 1..rowspertable LOOP
+                    EXECUTE format('INSERT INTO %s (date_ff,time_ff,test_id,bool_ff)
+    							VALUES (''2022-06-08'',''2022-06-08 12:31:03.945145'',''customers_check_8660184831103359040_all_types'', true)', random_table_names [counter_tables]);
+                END LOOP;
+        END LOOP;
+END;
+$procedure$
+
+
+SELECT
+    n.nspname AS schema_name,
+    p.proname AS procedure_name,
+    pg_get_functiondef(p.oid) AS definition,
+    r.rolname AS created_by
+FROM
+    pg_proc p
+        JOIN
+    pg_namespace n ON p.pronamespace = n.oid
+        JOIN
+    pg_roles r ON p.proowner = r.oid
+WHERE
+        n.nspname NOT IN ('pg_catalog', 'information_schema') -- Exclude system schemas
+ORDER BY
+    schema_name,
+    procedure_name;
+

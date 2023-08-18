@@ -101,7 +101,7 @@ export default {
               notie.alert({type: 'error', text: data.message, time: 2});
             } else {
               console.log("Success: ", data.message);
-              notie.alert({type: 'success', text: data.message, time: 2});
+              notie.alert({position: 'bottom', type: 'success', text: data.message, time: 2});
               this.$store.commit('setCredentials', payload);
               // this.$router.push({name: 'Home'});
             }

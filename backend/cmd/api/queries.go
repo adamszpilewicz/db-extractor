@@ -29,7 +29,7 @@ WHERE
     AND (TC.CONSTRAINT_TYPE = 'PRIMARY KEY' OR TC.CONSTRAINT_TYPE IS NULL);
 `
 
-	queryAll = `SELECT * FROM %s;`
+	queryAll = `SELECT * FROM %s.%s;`
 
 	queryViews = `
 SELECT viewname AS view_name, 
@@ -91,5 +91,43 @@ WHERE schemaname NOT IN ('pg_catalog', 'information_schema');
 			ss.idle_in_transaction_sessions,
 			ss.fastpath_function_call_sessions
 		FROM database_stats ds, session_stats ss;
+`
+
+	queryReplicationSlots = `
+SELECT
+    slot_name,
+    slot_type,
+    pg_size_pretty(pg_current_wal_lsn() - restart_lsn) AS retained_wal_size,
+    active,
+    wal_status,
+    plugin AS output_plugin,
+    database AS active_database,
+    restart_lsn,
+    confirmed_flush_lsn
+FROM
+    pg_replication_slots;
+
+`
+
+	queryStoredProcedures = `
+SELECT
+    n.nspname AS schema_name,
+    p.proname AS procedure_name,
+    pg_get_functiondef(p.oid) AS definition
+FROM
+    pg_proc p
+JOIN
+    pg_namespace n ON p.pronamespace = n.oid
+WHERE
+    n.nspname NOT IN ('pg_catalog', 'information_schema') -- Exclude system schemas
+ORDER BY
+    schema_name,
+    procedure_name;
+`
+
+	queryPgSettings = `
+SELECT name, setting, unit, context, short_desc
+FROM pg_settings
+order by context, name
 `
 )

@@ -30,5 +30,6 @@ export default {
 
 .content-wrapper {
   flex: 1; /* make the content-wrapper take up all available space */
+  padding-top: 60px; /* to compensate for the fixed navbar */
 }
 </style>

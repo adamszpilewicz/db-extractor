@@ -35,16 +35,25 @@ func (r *router) setupRoutes() {
 
 	r.gin.Use(cors.New(config))
 
+	//r.gin.Static("/", "./dist")
+	//
+	//r.gin.NoRoute(func(c *gin.Context) {
+	//	c.File("./dist/index.html")
+	//})
+
 	// Define routes
 	r.gin.GET("/users/login", r.app.Login)
 	r.gin.POST("/users/login", r.app.Login)
 	r.gin.POST("/schemas", r.app.Schemas)
-	r.gin.POST("/schemas/:tableName", r.app.TableColumns)
-	r.gin.POST("/download/:tableName", r.app.DownloadTableCSV)
+	r.gin.POST("/schemas/:schemaName/:tableName", r.app.TableColumns)
+	r.gin.POST("/download/:schemaName/:tableName", r.app.DownloadTableCSV)
 	r.gin.POST("/custom-query", r.app.ExecuteCustomQuery)
 	r.gin.POST("/views", r.app.AppViews)
 	r.gin.POST("/dbinfo", r.app.GetAppInfo)
 	r.gin.POST("/db-stats", r.app.DBStatistics)
+	r.gin.POST("/db-slots", r.app.FetchSlotsStats)
+	r.gin.POST("/stored-procedures", r.app.FetchStoredProcedures)
+	r.gin.POST("/pg-settings", r.app.FetchPgSettings)
 
 }
 
@@ -156,7 +165,8 @@ func (app *application) TableColumns(c *gin.Context) {
 	}
 
 	tableName := c.Param("tableName")
-	columns, err := repo.DiscoverTableColumns(tableName)
+	schemaName := c.Param("schemaName")
+	columns, err := repo.DiscoverTableColumns(schemaName, tableName)
 	if err != nil {
 		app.errorLog.Println("Could not retrieve columns:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -194,7 +204,8 @@ func (app *application) DownloadTableCSV(c *gin.Context) {
 	}
 
 	tableName := c.Param("tableName")
-	rows, err := repo.FetchTableData(tableName) // You need to implement FetchTableData in your repo.
+	schemaName := c.Param("schemaName")
+	rows, err := repo.FetchTableData(schemaName, tableName) // You need to implement FetchTableData in your repo.
 	if err != nil {
 		app.errorLog.Println("Could not retrieve rows:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -369,5 +380,107 @@ func (app *application) DBStatistics(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"error": false,
 		"data":  stats,
+	})
+}
+
+func (app *application) FetchSlotsStats(c *gin.Context) {
+	var creds Credentials
+
+	// Bind the POST body
+	if err := c.ShouldBindJSON(&creds); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format or missing fields"})
+		return
+	}
+
+	repo := NewDatabaseRepo(app, creds)
+	err := repo.Connect()
+	if err != nil {
+		log.Printf("Could not connect to the database: %v", err)
+		return
+	}
+
+	// Use the provided SQL query
+	result, err := repo.FetchReplicationSlotsStats()
+	if err != nil {
+		app.errorLog.Println("Error executing custom query:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   true,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	repo.DB.Close()
+	c.JSON(http.StatusOK, gin.H{
+		"error": false,
+		"data":  result,
+	})
+}
+
+func (app *application) FetchStoredProcedures(c *gin.Context) {
+	var creds Credentials
+
+	// Bind the POST body
+	if err := c.ShouldBindJSON(&creds); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format or missing fields"})
+		return
+	}
+
+	repo := NewDatabaseRepo(app, creds)
+	err := repo.Connect()
+	if err != nil {
+		log.Printf("Could not connect to the database: %v", err)
+		return
+	}
+
+	// Use the provided SQL query
+	result, err := repo.FetchProcedures()
+	if err != nil {
+		app.errorLog.Println("Error executing custom query:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   true,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	repo.DB.Close()
+	c.JSON(http.StatusOK, gin.H{
+		"error": false,
+		"data":  result,
+	})
+}
+
+func (app *application) FetchPgSettings(c *gin.Context) {
+	var creds Credentials
+
+	// Bind the POST body
+	if err := c.ShouldBindJSON(&creds); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format or missing fields"})
+		return
+	}
+
+	repo := NewDatabaseRepo(app, creds)
+	err := repo.Connect()
+	if err != nil {
+		log.Printf("Could not connect to the database: %v", err)
+		return
+	}
+
+	// Use the provided SQL query
+	result, err := repo.FetchPgSettings()
+	if err != nil {
+		app.errorLog.Println("Error executing custom query:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   true,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	repo.DB.Close()
+	c.JSON(http.StatusOK, gin.H{
+		"error": false,
+		"data":  result,
 	})
 }

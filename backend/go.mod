@@ -5,7 +5,9 @@ go 1.20
 require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
+	github.com/jackc/pglogrepl v0.0.0-20230810221841-d0818e1fbef7
 	github.com/jackc/pgx/v4 v4.18.1
+	github.com/jackc/pgx/v5 v5.4.3
 )
 
 require (

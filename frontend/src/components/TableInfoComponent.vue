@@ -37,7 +37,7 @@
 
 <script>
 export default {
-  props: ['tableName'],
+  props: ['tableName', 'schemaName'],
   data() {
     return {
       columns: [] // for storing columns info
@@ -56,7 +56,7 @@ export default {
         body: JSON.stringify(creds)
       };
 
-      fetch(`http://localhost:8081/schemas/${this.tableName}`, requestOptions)
+      fetch(`http://localhost:8081/schemas/${this.schemaName}/${this.tableName}`, requestOptions)
           .then(response => {
             if (!response.ok) {
               return response.text().then(text => {
@@ -83,7 +83,7 @@ export default {
         body: JSON.stringify(creds)
       };
 
-      fetch(`http://localhost:8081/download/${this.tableName}`, requestOptions)
+      fetch(`http://localhost:8081/download/${this.schemaName}/${this.tableName}`, requestOptions)
           .then(response => response.blob())
           .then(blob => {
             const url = window.URL.createObjectURL(blob);
