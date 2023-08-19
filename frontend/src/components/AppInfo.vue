@@ -58,4 +58,12 @@ export default {
 .card {
   margin-bottom: 10px;
 }
+
+.card-header.custom-header {
+  font-size: 0.9em;
+}
+
+.list-group-item {
+  font-size: 0.8em;
+}
 </style>

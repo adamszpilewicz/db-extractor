@@ -30,6 +30,21 @@
         </tr>
         </tbody>
       </table>
+
+      <!-- Table with sample data-->
+      <table class="table table-hover table-striped mt-4">
+        <thead class="thead-dark">
+        <tr>
+          <th v-for="(value, key) in sampleData[0]" :key="key">{{ key }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="row in sampleData" :key="row.id || row.primaryKey">
+          <td v-for="value in Object.values(row)" :key="value">{{ value }}</td>
+        </tr>
+        </tbody>
+      </table>
+
     </div>
   </div>
 </template>
@@ -40,11 +55,13 @@ export default {
   props: ['tableName', 'schemaName'],
   data() {
     return {
-      columns: [] // for storing columns info
+      columns: [],  // for storing columns info
+      sampleData: []  // for storing sample row data
     };
   },
   created() {
     this.loadColumns();
+    this.loadSampleData();
   },
   methods: {
     loadColumns() {
@@ -52,7 +69,7 @@ export default {
 
       const requestOptions = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(creds)
       };
 
@@ -75,11 +92,33 @@ export default {
           .catch(error => console.error('Error fetching column data:', error));
     },
 
+    loadSampleData() {
+      const creds = this.$store.state.credentials;
+
+      const requestOptions = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(creds)
+      };
+
+      fetch(`http://localhost:8081/sample/${this.schemaName}/${this.tableName}`, requestOptions)
+          .then(response => response.json())
+          .then(data => {
+            if (data && !data.error) {
+              this.sampleData = data.rows;
+            } else {
+              console.error('Error fetching sample data:', data.message || 'Unknown error');
+            }
+          })
+          .catch(error => console.error('Error fetching sample data:', error));
+    },
+
+
     downloadCSV() {
       const creds = this.$store.state.credentials;
       const requestOptions = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(creds)
       };
 
@@ -99,3 +138,9 @@ export default {
 }
 </script>
 
+<style scoped>
+.table tbody td {
+  font-size: 14px; /* Adjust the value as needed */
+}
+
+</style>

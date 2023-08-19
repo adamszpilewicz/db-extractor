@@ -2,7 +2,7 @@ SELECT * FROM pg_create_logical_replication_slot('test_logical_slot_6', 'pgoutpu
 
 SELECT * FROM pg_replication_slots;
 
-SELECT pg_drop_replication_slot('rivery_55bf7c4270fdca16cac18761_64cd2d0bcac682000fa46b4a_source');
+SELECT pg_drop_replication_slot('test_logical_slot_5');
 
 CREATE PUBLICATION my_publication FOR ALL TABLES;
 

@@ -77,4 +77,9 @@ export default {
   max-height: 100px;
   overflow-y: auto;
 }
+
+.table tbody td {
+  font-size: 14px;  /* Adjust the value as needed */
+}
+
 </style>

@@ -14,6 +14,11 @@ type Credentials struct {
 	Password string `json:"password"`
 }
 
+type CustomQueryRequest struct {
+	Credentials Credentials `json:"credentials"`
+	Query       string      `json:"query"`
+}
+
 type SchemaInfo struct {
 	SchemaName string   `json:"schema_name"`
 	TableNames []string `json:"table_names"`

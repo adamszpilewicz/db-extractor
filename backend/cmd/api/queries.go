@@ -130,4 +130,5 @@ SELECT name, setting, unit, context, short_desc
 FROM pg_settings
 order by context, name
 `
+	querySample = `SELECT * FROM %s.%s limit 10;`
 )

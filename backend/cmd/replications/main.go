@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	PGLOGREPL_DEMO_CONN_STRING = "postgres://user:password@127.0.0.1:5434/mydatabase?replication=database"
+	PGLOGREPL_DEMO_CONN_STRING = "postgres://postgres:postgres@127.0.0.1:5432/postgres?replication=database"
 )
 
 func main() {

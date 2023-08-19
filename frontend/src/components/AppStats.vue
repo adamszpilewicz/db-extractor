@@ -8,21 +8,28 @@
       </div>
       <hr>
 
+      <!-- Loading Spinner -->
+      <div v-if="loading" class="mt-5 d-flex justify-content-center">
+        <div class="spinner-grow text-primary" role="status" style="opacity: 0.7;"></div>
+      </div>
+
       <!-- Table to display the database statistics -->
-      <table class="table table-bordered table-hover table-striped">
-        <thead>
-        <tr>
-          <th>Statistic Name</th>
-          <th>Value</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="(value, key) in dbStats" :key="key">
-          <td>{{ formatKey(key) }}</td>
-          <td>{{ getDisplayValue(value) }}</td>
-        </tr>
-        </tbody>
-      </table>
+      <div v-if="!loading"> <!-- Add this line -->
+        <table class="table table-bordered table-hover table-striped">
+          <thead>
+          <tr>
+            <th>Statistic Name</th>
+            <th>Value</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr v-for="(value, key) in dbStats" :key="key">
+            <td>{{ formatKey(key) }}</td>
+            <td>{{ getDisplayValue(value) }}</td>
+          </tr>
+          </tbody>
+        </table>
+      </div> <!-- And close the div here -->
     </div>
   </div>
 </template>
@@ -33,7 +40,8 @@ import notie from 'notie'
 export default {
   data() {
     return {
-      dbStats: {}
+      dbStats: {},
+      loading: false
     };
   },
   beforeMount() {
@@ -41,6 +49,8 @@ export default {
   },
   methods: {
     loadDBStats() {
+      this.dbStats = {};
+      this.loading = true;
       const creds = this.$store.state.credentials;
       const requestOptions = {
         method: 'POST',
@@ -52,8 +62,12 @@ export default {
           .then(response => response.json())
           .then(data => {
             this.dbStats = data.data;
+            this.loading = false;  // <-- Move this line here
           })
-          .catch(error => console.error('Error fetching database statistics:', error));
+          .catch(error => {
+            console.error('Error fetching database statistics:', error);
+            this.loading = false;  // <-- Also set loading to false in case of error
+          });
     },
     getDisplayValue(value) {
       if (value && value.Valid) {
@@ -84,6 +98,11 @@ export default {
 </script>
 
 <style scoped>
+/* Custom styles for the transparent blue spinner */
+.spinner-grow.text-primary {
+  background-color: rgba(0, 123, 255, 0.7); /* Blue with 70% opacity */
+}
+
 /* Add padding to cells for better readability */
 .table > tbody > tr > td,
 .table > thead > tr > th {
@@ -98,5 +117,9 @@ export default {
 /* Optional: Give a border-bottom to each row for clear separation */
 .table > tbody > tr {
   border-bottom: 1px solid #dee2e6;
+  max-width: 100%; /* Or you can set this to a fixed pixel value if desired */
+  overflow-x: auto; /* Enable horizontal scrolling */
+  font-size: 0.8rem;
 }
+
 </style>

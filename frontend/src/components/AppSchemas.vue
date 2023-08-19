@@ -2,13 +2,18 @@
   <div class="container">
     <div class="row">
       <div class="col">
-        <h1 class="mt-5 mb-3">Schemas</h1> <!-- Adjust margin for better spacing -->
-        <button @click="loadSchemas" class="btn btn-primary mb-3">Reload</button> <!-- The reload button -->
+        <h1 class="mt-5 mb-3">Schemas</h1>
+        <button @click="loadSchemas" class="btn btn-primary mb-3">Reload</button>
         <hr>
 
+        <!-- Loading Spinner -->
+        <div v-if="loading" class="d-flex justify-content-center mb-3">
+          <div class="spinner-border" role="status"></div>
+        </div>
+
         <!-- Table to display the schemas -->
-        <table class="table table-bordered table-striped table-hover"> <!-- Added table-striped and table-hover -->
-          <thead class="thead-dark"> <!-- Made the header dark for better contrast -->
+        <table v-if="!loading" class="table table-bordered table-striped table-hover">
+          <thead class="thead-dark">
           <tr>
             <th>Schema Name</th>
             <th>Table</th>
@@ -31,15 +36,12 @@
 </template>
 
 
-
-
 <script>
-
-
 export default {
   data() {
     return {
-      schemas: []
+      schemas: [],
+      loading: false
     }
   },
   beforeMount() {
@@ -47,6 +49,8 @@ export default {
   },
   methods: {
     loadSchemas() {
+      this.schemas = []; // Empty the schemas array
+      this.loading = true; // Set loading to true at the start
       const creds = this.$store.state.credentials;
       const requestOptions = {
         method: 'POST',
@@ -54,16 +58,29 @@ export default {
         body: JSON.stringify(creds)
       };
 
-      console.log("Request options: ", requestOptions);
-
       fetch('http://localhost:8081/schemas', requestOptions)
           .then(response => response.json())
           .then(response => {
-            this.schemas = response
+            this.schemas = response;
+            this.loading = false; // Set loading to false once data is fetched
           })
-          .catch(error => console.log(error))
+          .catch(error => {
+            console.log(error);
+            this.loading = false; // Also set loading to false in case of error
+          })
     }
   }
 }
-
 </script>
+
+<style scoped>
+.definition-column pre {
+  white-space: pre-wrap;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.table tbody td {
+  font-size: 14px;  /* Adjust the value as needed */
+}
+</style>

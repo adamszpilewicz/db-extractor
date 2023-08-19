@@ -98,7 +98,7 @@ export default {
           .then(data => {
             if (data.error) {
               console.log("Error: ", data.message);
-              notie.alert({type: 'error', text: data.message, time: 2});
+              notie.force({position: 'bottom', type: 'error', text: data.message});
             } else {
               console.log("Success: ", data.message);
               notie.alert({position: 'bottom', type: 'success', text: data.message, time: 2});

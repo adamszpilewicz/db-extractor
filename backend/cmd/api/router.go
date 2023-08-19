@@ -54,6 +54,7 @@ func (r *router) setupRoutes() {
 	r.gin.POST("/db-slots", r.app.FetchSlotsStats)
 	r.gin.POST("/stored-procedures", r.app.FetchStoredProcedures)
 	r.gin.POST("/pg-settings", r.app.FetchPgSettings)
+	r.gin.POST("/sample/:schemaName/:tableName", r.app.FetchSample)
 
 }
 
@@ -87,7 +88,7 @@ func (app *application) Login(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   true,
-			"message": "Could not connect to the database",
+			"message": fmt.Sprintf("Could not connect to the database: %v", err),
 		})
 		return
 	}
@@ -231,11 +232,6 @@ func (app *application) DownloadTableCSV(c *gin.Context) {
 	c.Header("Content-Type", "text/csv")
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s.csv", tableName))
 	c.String(http.StatusOK, string(csvData))
-}
-
-type CustomQueryRequest struct {
-	Credentials Credentials `json:"credentials"`
-	Query       string      `json:"query"`
 }
 
 func (app *application) ExecuteCustomQuery(c *gin.Context) {
@@ -482,5 +478,44 @@ func (app *application) FetchPgSettings(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"error": false,
 		"data":  result,
+	})
+}
+
+// TableColumns is the handler used to retrieve columns of a specific table
+func (app *application) FetchSample(c *gin.Context) {
+	var creds Credentials
+
+	// Bind the POST body to the Credentials struct
+	if err := c.ShouldBindJSON(&creds); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Credentials are required"})
+		return
+	}
+
+	repo := NewDatabaseRepo(app, creds)
+	err := repo.Connect()
+	if err != nil {
+		log.Printf("Could not connect to the database: %v", err)
+		return
+	}
+
+	tableName := c.Param("tableName")
+	schemaName := c.Param("schemaName")
+	rows, err := repo.FetchSample(schemaName, tableName)
+	if err != nil {
+		app.errorLog.Println("Could not retrieve columns:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   true,
+			"message": "Could not retrieve columns",
+		})
+		return
+	}
+
+	log.Printf("Columns for table %s retrieved successfully: %v", tableName, rows)
+
+	repo.DB.Close()
+	c.JSON(http.StatusOK, gin.H{
+		"error":   false,
+		"message": "Columns retrieved successfully",
+		"rows":    rows,
 	})
 }

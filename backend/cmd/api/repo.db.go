@@ -214,3 +214,16 @@ func (repo *DatabaseRepo) FetchPgSettings() ([]TableRow, error) {
 
 	return ProcessRows(rows)
 }
+
+func (repo *DatabaseRepo) FetchSample(schemaName, tableName string) ([]TableRow, error) {
+	// Construct the query to fetch all rows from the given table
+	query := fmt.Sprintf(querySample, schemaName, tableName)
+
+	rows, err := repo.DB.Query(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return ProcessRows(rows)
+}
